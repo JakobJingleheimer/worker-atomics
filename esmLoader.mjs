@@ -18,7 +18,7 @@ export function importMetaResolve(specifier) {
 		port2: requestor,
 	} = new MessageChannel();
 	responder.once('message', (msg) => {
-		console.log(Date.now(), `[ESMLoader]: incoming message '${msg }'`);
+		console.log(process.hrtime(), `[ESMLoader]: incoming message '${msg }'`);
 		output = msg;
 	});
 	worker.postMessage({
@@ -30,7 +30,7 @@ export function importMetaResolve(specifier) {
 
 	Atomics.wait(lock, 0, 0);
 
-	console.log(Date.now(), `[ESMLoader]: '${specifier}' awakened with '${output}'`);
+	console.log(process.hrtime(), `[ESMLoader]: '${specifier}' awakened with '${output}'`);
 
 	return output;
 }

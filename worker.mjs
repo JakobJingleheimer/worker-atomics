@@ -1,13 +1,13 @@
 import { parentPort, workerData } from 'node:worker_threads';
 
-console.log(Date.now(), '[worker]: initialised');
+console.log(process.hrtime(), '[worker]: initialised');
 
 parentPort.on('message', ({ lock, requestor, type, value }) => {
-	console.log(Date.now(), `[worker]: received a ${type} request for '${value}'`);
+	console.log(process.hrtime(), `[worker]: received a ${type} request for '${value}'`);
 
 	setTimeout(() => {
 		const output = handlers[type]?.(value);
-		console.log(Date.now(), `[worker]: responding '${output}'`);
+		console.log(process.hrtime(), `[worker]: responding '${output}'`);
 		requestor.postMessage(output);
 		Atomics.notify(lock, 0);
 	}, 1_000);
