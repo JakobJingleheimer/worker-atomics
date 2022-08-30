@@ -1,22 +1,27 @@
 import { parentPort, workerData } from 'node:worker_threads';
 
-console.log(process.hrtime(), '[worker]: initialised');
-
-parentPort.on('message', ({ lock, requestor, type, value }) => {
-	console.log(process.hrtime(), `[worker]: received a ${type} request for '${value}'`);
-
-	setTimeout(() => {
-		const output = handlers[type]?.(value);
-		console.log(process.hrtime(), `[worker]: responding '${output}'`);
-		requestor.postMessage(output);
-		Atomics.notify(lock, 0);
-	}, 1_000);
-});
+const { buf } = workerData;
+const lock = new Int32Array(buf, 0, 4);
+const data = new Uint8Array(buf, 4, 2044);
 
 const handlers = {
-	resolve(v) {
+	async resolve(v) {
+		await new Promise(resolve => setTimeout(resolve, 1000));
 		return `./something/${v}.mjs`;
-	},
+	}
 };
 
-Atomics.notify(workerData.lock, 0);
+parentPort.postMessage('initialized');
+
+// event loop!
+while (true) {
+	// no need to block out own event loop
+	Atomics.wait(lock, 0, 0);
+	const specifier = new TextDecoder().decode(data);
+	// async work is syncified
+	const resolved = await handlers.resolve(specifier);
+	data.fill(0);
+	new TextEncoder().encodeInto(resolved, data);
+	Atomics.store(lock, 0, 0);
+	Atomics.notify(lock, 0);
+}

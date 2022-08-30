@@ -1,8 +1,9 @@
 import { importMetaResolve } from './esmLoader.mjs';
 
-console.log(process.hrtime(), '[main]: before');
+console.log('Resolve foo');
+const fooVal = importMetaResolve('foo');
+console.log(`Foo is ${fooVal}`);
 
-console.log(process.hrtime(), `[main]: 'foo' yielded '${importMetaResolve('foo')}'`);
-console.log(process.hrtime(), `[main]: 'bar' yielded '${importMetaResolve('bar')}'`);
-
-console.log(process.hrtime(), '[main]: after');
+console.log('Resolve bar');
+const barVal = importMetaResolve('bar');
+console.log(`Bar is ${barVal}`);
