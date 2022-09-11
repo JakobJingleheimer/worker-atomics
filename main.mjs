@@ -1,9 +1,9 @@
 import { importMetaResolve } from './esmLoader.mjs';
 
-console.log('Resolve foo');
+console.log('[Main]:', 'Resolve foo');
 const fooVal = importMetaResolve('foo');
-console.log(`Foo is ${fooVal}`);
+console.log('[Main]:', `Foo is ${fooVal}`);
 
-console.log('Resolve bar');
+console.log('[Main]:', 'Resolve bar');
 const barVal = importMetaResolve('bar');
-console.log(`Bar is ${barVal}`);
+console.log('[Main]:', `Bar is ${barVal}`);

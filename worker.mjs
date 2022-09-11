@@ -17,11 +17,15 @@ parentPort.postMessage('initialized');
 while (true) {
 	// no need to block out own event loop
 	Atomics.wait(lock, 0, 0);
-	const specifier = new TextDecoder().decode(data);
+	const request = JSON.parse(
+		(new TextDecoder().decode(data))
+			.replaceAll('\x00', '') // strip empty space
+	);
+	console.log('[Worker]:', { request })
 	// async work is syncified
-	const resolved = await handlers.resolve(specifier);
+	const response = await handlers[request.type](request.data);
 	data.fill(0);
-	new TextEncoder().encodeInto(resolved, data);
+	new TextEncoder().encodeInto(response, data);
 	Atomics.store(lock, 0, 0);
 	Atomics.notify(lock, 0);
 }
