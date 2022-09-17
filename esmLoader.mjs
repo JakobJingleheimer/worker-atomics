@@ -12,16 +12,10 @@ const worker = new Worker('./worker.mjs', {
 worker.on('exit', () => console.log(`[ESMLoader]: worker ${worker.threadId} terminated`))
 worker.on('error', (err) => console.error(`[ESMLoader]: worker ${worker.threadId}`, err))
 
-// This doesn't work (beforeExit is never triggered) but would be ideal if it did.
-worker.unref();
-process.on('beforeExit', () => {
-	console.log('[ESMLoader]: node is trying to exit');
-	// Either forcefully terminate the worker
-	// or awken it with a 'terminate' request and allow it to gracefully terminate.
-});
-
 // This intentionally blocks this "ESMLoader" module until the worker is ready.
-await new Promise(resolve => worker.on('message', resolve));
+await new Promise(resolve => worker.once('message', resolve));
+
+worker.unref(); // allow the process to exit when the worker is in its final sleep
 
 export function importMetaResolve(specifier) {
 	data.fill(0);
