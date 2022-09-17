@@ -7,5 +7,3 @@ Run the experiment:
 ```console
 node main.mjs
 ```
-
-> ⚠️ Beware: In the current state, the `main` does **not** terminate on its own. It must be forcefully killed (eg with <kbd>control</kbd>+<kbd>c</kbd>).
