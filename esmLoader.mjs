@@ -1,21 +1,17 @@
 import { Worker } from 'node:worker_threads';
 
-const buf = new SharedArrayBuffer(2048);
-const lock = new Int32Array(buf, 0, 4); // required by Atomics
+const comsChannel = new SharedArrayBuffer(2048);
+const lock = new Int32Array(comsChannel, 0, 4); // required by Atomics
 
 // request / response memory space
-const data = new Uint8Array(buf, 4, 2044); // for TextEncoder/TextDencoder
+const data = new Uint8Array(comsChannel, 4, 2044); // for TextEncoder/TextDencoder
 
 const worker = new Worker('./worker.mjs', {
-	workerData: { buf },
+	workerData: { comsChannel },
 });
-worker.on('exit', () => console.log(`[ESMLoader]: worker ${worker.threadId} terminated`))
-worker.on('error', (err) => console.error(`[ESMLoader]: worker ${worker.threadId}`, err))
+worker.unref(); // ! Allow the process to eventually exit when worker is in its final sleep.
 
-// This intentionally blocks this "ESMLoader" module until the worker is ready.
-await new Promise(resolve => worker.once('message', resolve));
-
-worker.unref(); // allow the process to exit when the worker is in its final sleep
+Atomics.wait(lock, 0, 1); // ! Block this module until the worker is ready.
 
 export function importMetaResolve(specifier) {
 	data.fill(0);

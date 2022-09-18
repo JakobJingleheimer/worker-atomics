@@ -1,8 +1,8 @@
-import { parentPort, workerData } from 'node:worker_threads';
+import { workerData } from 'node:worker_threads';
 
-const { buf } = workerData;
-const lock = new Int32Array(buf, 0, 4); // required by Atomics
-const data = new Uint8Array(buf, 4, 2044); // for TextEncoder/TextDencoder
+const { comsChannel } = workerData;
+const lock = new Int32Array(comsChannel, 0, 4); // required by Atomics
+const data = new Uint8Array(comsChannel, 4, 2044); // for TextEncoder/TextDencoder
 
 const handlers = {
 	async resolve(v) {
@@ -11,7 +11,8 @@ const handlers = {
 	}
 };
 
-parentPort.postMessage('initialized');
+Atomics.store(lock, 0, 0); // Send 'ready' signal to main
+Atomics.notify(lock, 0); // Notify main of signal
 
 while (true) { // event loop
 	Atomics.wait(lock, 0, 0); // this pauses the while loop
