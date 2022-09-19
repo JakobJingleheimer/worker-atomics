@@ -11,11 +11,11 @@ const handlers = {
 	}
 };
 
-Atomics.store(lock, 0, 0); // Send 'ready' signal to main
+Atomics.store(lock, 0, 1); // Send 'ready' signal to main
 Atomics.notify(lock, 0); // Notify main of signal
 
 while (true) { // event loop
-	Atomics.wait(lock, 0, 0); // this pauses the while loop
+	Atomics.wait(lock, 0, 1); // this pauses the while loop
 	// worker is now active and main is sleeping
 	const request = JSON.parse(
 		(new TextDecoder().decode(data))
@@ -24,6 +24,6 @@ while (true) { // event loop
 	const response = await handlers[request.type](request.data);
 	data.fill(0);
 	new TextEncoder().encodeInto(response, data);
-	Atomics.store(lock, 0, 0); // send response to main
+	Atomics.store(lock, 0, 1); // send response to main
 	Atomics.notify(lock, 0); // notify main of new response
 }
