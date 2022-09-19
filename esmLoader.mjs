@@ -1,3 +1,4 @@
+import { deserialize, serialize } from 'node:v8';
 import { Worker } from 'node:worker_threads';
 
 const commsChannel = new SharedArrayBuffer(2048);
@@ -15,13 +16,13 @@ Atomics.wait(lock, 0, 0); // ! Block this module until the worker is ready.
 
 export function importMetaResolve(specifier) {
 	requestResponseData.fill(0);
-	const request = JSON.stringify({
+	const request = serialize({
 		data: specifier,
 		type: 'resolve',
 	});
-	new TextEncoder().encodeInto(request, requestResponseData);
+	requestResponseData.set(request);
 	Atomics.store(lock, 0, 0); // send request to worker
 	Atomics.notify(lock, 0); // notify worker of new request
 	Atomics.wait(lock, 0, 0); // sleep until worker responds
-	return new TextDecoder().decode(requestResponseData);
+	return deserialize(requestResponseData);
 }

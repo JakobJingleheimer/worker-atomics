@@ -1,3 +1,4 @@
+import { deserialize, serialize } from 'node:v8';
 import { workerData } from 'node:worker_threads';
 
 const { commsChannel } = workerData;
@@ -17,13 +18,10 @@ Atomics.notify(lock, 0); // Notify main of signal
 while (true) { // event loop
 	Atomics.wait(lock, 0, 1); // this pauses the while loop
 	// worker is now active and main is sleeping
-	const request = JSON.parse(
-		(new TextDecoder().decode(requestResponseData))
-			.replaceAll('\x00', '') // strip empty space (not a great solution)
-	);
-	const response = await handlers[request.type](request.data);
+	const { data, type } = deserialize(requestResponseData);
+	const response = await handlers[type](data);
 	requestResponseData.fill(0);
-	new TextEncoder().encodeInto(response, requestResponseData);
+	requestResponseData.set(serialize(response));
 	Atomics.store(lock, 0, 1); // send response to main
 	Atomics.notify(lock, 0); // notify main of new response
 }
