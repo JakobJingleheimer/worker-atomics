@@ -1,9 +1,6 @@
-import { deserialize, serialize } from 'node:v8';
-import { workerData } from 'node:worker_threads';
+import { workerData, parentPort } from 'node:worker_threads';
 
-const { commsChannel } = workerData;
-const lock = new Int32Array(commsChannel, 0, 4); // required by Atomics
-const requestResponseData = new Uint8Array(commsChannel, 4, 2044); // for TextEncoder/TextDencoder
+const { lock, commPort } = workerData;
 
 const handlers = {
 	async resolve(v) {
@@ -12,16 +9,22 @@ const handlers = {
 	}
 };
 
+commPort.on('message', handleSyncMessage);
+parentPort.on('message', handleAsyncMessage);
+
 Atomics.store(lock, 0, 1); // Send 'ready' signal to main
 Atomics.notify(lock, 0); // Notify main of signal
 
-while (true) { // event loop
-	Atomics.wait(lock, 0, 1); // this pauses the while loop
-	// worker is now active and main is sleeping
-	const { data, type } = deserialize(requestResponseData);
+async function handleSyncMessage({data, type}) {
+	console.log('got sync message')
 	const response = await handlers[type](data);
-	requestResponseData.fill(0);
-	requestResponseData.set(serialize(response));
+	commPort.postMessage(response);
 	Atomics.store(lock, 0, 1); // send response to main
 	Atomics.notify(lock, 0); // notify main of new response
+}
+
+async function handleAsyncMessage({id, data, type}) {
+	console.log('got async message')
+	const response = await handlers[type](data);
+	parentPort.postMessage({id, message: response});
 }
