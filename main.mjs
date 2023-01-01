@@ -1,4 +1,4 @@
-import { importMetaResolve, asyncResolve, terminate } from './esmLoader.mjs';
+import { importMetaResolve, asyncResolve } from './esmLoader.mjs';
 
 console.log('[Main]:', 'Resolve foo');
 const fooVal = importMetaResolve('foo');
@@ -14,4 +14,4 @@ const barVal = importMetaResolve('bar');
 console.log('[Main]:', 'Bar is', barVal);
 
 // Keep the thread alive a bit to get the last logs.
-setTimeout(terminate, 100);
+setTimeout(() => {}, 1000);

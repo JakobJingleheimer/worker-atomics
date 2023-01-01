@@ -17,6 +17,8 @@ worker.on('message', ({id, message}) => {
 	jobs.delete(id);
 });
 
+worker.unref();
+
 lockThread();
 
 export function importMetaResolve(specifier) {
@@ -26,10 +28,6 @@ export function importMetaResolve(specifier) {
 
 export function asyncResolve(specifier) {
 	return doAsyncWork({data: specifier, type: 'resolve'});
-}
-
-export function terminate() {
-	worker.terminate();
 }
 
 function doSyncWork(message) {
